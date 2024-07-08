@@ -52,10 +52,17 @@ import org.piramalswasthya.cho.database.room.dao.VaccinationTypeAndDoseDao
 import org.piramalswasthya.cho.database.room.dao.VillageMasterDao
 import org.piramalswasthya.cho.database.room.dao.VisitReasonsAndCategoriesDao
 import org.piramalswasthya.cho.database.room.dao.VitalsDao
+import org.piramalswasthya.cho.database.room.typeconverters.FloatListConverters
 import org.piramalswasthya.cho.moddel.OccupationMaster
 import org.piramalswasthya.cho.model.*
 import org.piramalswasthya.cho.model.fhir.SelectedOutreachProgram
 import timber.log.Timber
+
+
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.work.impl.Migration_11_12
+
 
 @Database(
     entities = [
@@ -139,7 +146,7 @@ import timber.log.Timber
         CbacCache::class
     ],
     views = [PrescriptionWithItemMasterAndDrugFormMaster::class],
-    version = 102, exportSchema = false
+    version = 103, exportSchema = false
 )
 
 
@@ -154,8 +161,10 @@ import timber.log.Timber
     MasterDataListConverter::class,
     LocationConverter::class,
     DateConverter::class,
-    UserMasterLocationConverter::class
+    UserMasterLocationConverter::class,
+    FloatListConverters::class
 )
+
 
 abstract class InAppDb : RoomDatabase() {
 
@@ -205,6 +214,14 @@ abstract class InAppDb : RoomDatabase() {
         @Volatile
         private var INSTANCE: InAppDb? = null
 
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add the new column. Note that you cannot use Room's annotations here.
+                database.execSQL("ALTER TABLE PATIENT ADD COLUMN faceEmbedding TEXT DEFAULT NULL")
+            }
+        }
+
+
         fun getInstance(appContext: Context): InAppDb {
 
             synchronized(this) {
@@ -217,6 +234,7 @@ abstract class InAppDb : RoomDatabase() {
                     )
 //                        .allowMainThreadQueries()
                         .fallbackToDestructiveMigration()
+                        .addMigrations(MIGRATION_1_2)
                         .setQueryCallback(
                             object : QueryCallback {
                                 override fun onQuery(sqlQuery: String, bindArgs: List<Any?>) {

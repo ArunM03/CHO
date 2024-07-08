@@ -167,6 +167,7 @@ class PatientDetailsFragment : Fragment() , NavigationAdapter {
                                     boundingBox.height()
                                 )
                                 embeddings = faceNetModel.getFaceEmbedding(faceBitmap)
+                                patient.faceEmbedding = embeddings?.toList() ?: listOf()
                                 Toast.makeText(requireContext(), "Face Embeddings Generated", Toast.LENGTH_SHORT).show()
 
                             }
@@ -187,6 +188,7 @@ class PatientDetailsFragment : Fragment() , NavigationAdapter {
         val photoFile: File? = try {
             createImageFile()
         } catch (ex: Exception) {
+            Log.d("PatientDetailsFragment","PatientDetailsFragment ${ex.message}")
             null
         }
 
@@ -197,7 +199,6 @@ class PatientDetailsFragment : Fragment() , NavigationAdapter {
                 it
             )
             takePictureLauncher.launch(photoURI)
-
         }
     }
     private fun createImageFile(): File {
